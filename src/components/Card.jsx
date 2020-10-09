@@ -1,48 +1,131 @@
-import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
+// useEffect, useState
+import React, { useState, useEffect } from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
+import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
+import { makeStyles } from '@material-ui/core/styles';
+import Container from '@material-ui/core/Container';
+import AddIcon from '@material-ui/icons/Add';
+import CheckIcon from '@material-ui/icons/Check';
+import RemoveIcon from '@material-ui/icons/Remove';
+// Import Axiso - HTTP Client
+import axios from 'axios';
 
-const useStyles = makeStyles({
-    root: {
-        minWidth: 275,
+// CSS
+const useStyles = makeStyles((theme) => ({
+    cardGrid: {
+        paddingTop: theme.spacing(8),
+        paddingBottom: theme.spacing(8),
     },
-    bullet: {
-        display: 'inline-block',
-        margin: '0 2px',
-        transform: 'scale(0.8)',
+    card: {
+        height: '100%',
+        display: 'flex',
+        maxWidth: '380px',
+        flexDirection: 'column',
+        boxShadow: '-9px 9px 20px rgb(51 51 51 / 17%), -10px 8px 40px rgb(232 232 232 / 23%)',
+        borderRadius: 10
     },
-    title: {
-        fontSize: 14,
+    cardContent: {
+        paddingLeft: theme.spacing(5),
+        flexGrow: 1,
     },
-    pos: {
-        marginBottom: 12,
+    icon: {
+        fontSize: 30,
+        color: 'red'
     },
-    bold: {
+    textTitle: {
         fontWeight: 'bold'
+    },
+    textAmount: {
+        marginTop: 20,
+        fontWeight: 'bolder'
+    },
+    textDescription: {
+        fontWeight: '100'
     }
-});
+}));
 
-export default function SimpleCard() {
+function BaseCard({ ...props }) {
     const classes = useStyles();
 
     return (
-        <Card className={classes.root}>
-            <CardContent>
-                <Typography className={classes.title} color="textSecondary" gutterBottom>
-                    Makassar Dev Society
-        </Typography>
-                <Typography variant="h5" component="h2" className={classes.bold}>
-                    Muhammad Alkautsar Sanusi
-        </Typography>
-                <Typography className={classes.pos} color="textSecondary">
-                    Lucky Laki
-        </Typography>
-                <Typography variant="body2" component="p">
-                    Yang penting halal!
-        </Typography>
+        <Card className={classes.card}>
+            <CardContent className={classes.cardContent}>
+                <Typography variant="h6" align="left" className={classes.textTitle} gutterBottom>
+                    <div className={classes.icon}>
+                        {props.icon}
+                    </div>
+                    {props.title}
+                </Typography>
+                <Typography variant="h3" align="left" className={classes.textAmount}>
+                    {props.amount}
+                </Typography>
+                <Typography variant="subtitle2" align="left" className={classes.textDescription}>
+                    {props.description}
+                </Typography>
             </CardContent>
         </Card>
+    )
+}
+
+export default function FixedCard() {
+    const classes = useStyles();
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        // Format Awal Axios
+        // axios.get('')
+        // .then(res => {
+        // })
+        // .catch(err => {
+        // })
+
+        axios.get('http://api.coronatracker.com/v3/stats/worldometer/country?countryCode=ID')
+            .then(res => {
+                // Terniary Option -> ES6 If Else
+                setData(res ? res.data[0] : [])
+            })
+            .catch(err => {
+                setData([])
+            })
+    }, [])
+
+    const cardData = [
+        {
+            id: 1,
+            icon: <AddIcon />,
+            title: "Case Confirmed",
+            amount: data.totalConfirmed ? data.totalConfirmed.toLocaleString() : 0,
+            description: "Total of confirmed cases."
+        },
+        {
+            id: 2,
+            icon: <CheckIcon style={{ color: 'green' }} />,
+            title: "Case Recovered",
+            amount: data.totalRecovered ? data.totalRecovered.toLocaleString() : 0,
+            description: "Total of recovered cases."
+        },
+        {
+            id: 3,
+            icon: <RemoveIcon style={{ color: 'black' }} />,
+            title: "Case Death",
+            amount: data.totalDeaths ? data.totalDeaths.toLocaleString() : 0,
+            description: "Total of death cases."
+        }
+    ]
+
+    return (
+        <div>
+            <Container className={classes.cardGrid}>
+                <Grid container spacing={4}>
+                    {cardData.map((data) => (
+                        <Grid item key={data.id} xs={12} md={6}>
+                            <BaseCard icon={data.icon} title={data.title} amount={data.amount} description={data.description} />
+                        </Grid>
+                    ))}
+                </Grid>
+            </Container>
+        </div>
     );
 }
